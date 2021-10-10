@@ -4,7 +4,7 @@ from Sintatico import Sintatico
 
 def main():
     #pass
-    lex = Lexico("exemplo.lalg.txt")
+    lex = Lexico("correto2.lalg.txt")
     lista = lex.catchAllTokens()
     sint = Sintatico(lista)
       
@@ -12,7 +12,7 @@ def main():
         for isa in lista:
             print(isa.termo, isa.tipo.name) 
 
-    sint.programa()
+   # sint.programa()
 
 
 if __name__=="__main__":

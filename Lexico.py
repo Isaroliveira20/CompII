@@ -16,7 +16,9 @@ class Lexico():
         nomeToken = ""
 
 
+
         while True:
+
             c = self.proxcaracter() #ler o proximo caracter
             if c == 0:
                 return self.guardaToken
@@ -38,6 +40,12 @@ class Lexico():
                 elif c == "<" :
                     estado = 5
                     nomeToken += c 
+
+                elif c == "{" :
+                    estado = 69
+
+                elif c == "/" and self.espia() == "*":
+                    estado = 6969
 
                 elif self.isSimbolo(c):
                     estado = 0
@@ -158,9 +166,26 @@ class Lexico():
                     self.back()
                     token = None
                     estado = 0  
-            
+            elif estado == 69:
+                if c == "}":
+                    estado = 0
+                else:
+                    estado = 69
 
+            elif estado == 6969:
+                if c == "*" and self.espia() == "/":
+                    estado = 0
+                    self.proxcaracter()
+                else:
+                    estado = 6969
+            
         return self.guardaToken
+
+
+    def espia(self):
+        if self.pos > len(self.listachar):
+            return 0
+        return self.listachar[self.pos] 
 
     def proxcaracter(self):
         if self.isEOF():
