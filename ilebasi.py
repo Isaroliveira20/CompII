@@ -8,11 +8,11 @@ def main():
     lista = lex.catchAllTokens()
     sint = Sintatico(lista)
       
-    if lista:
-        for isa in lista:
-            print(isa.termo, isa.tipo.name) 
+   # if lista:
+   #    for isa in lista:
+   #       print(isa.termo, isa.tipo.name) 
 
-   # sint.programa()
+    sint.programa()
 
 
 if __name__=="__main__":

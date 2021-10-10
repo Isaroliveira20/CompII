@@ -119,6 +119,7 @@ class Sintatico():
         self.comando()
         self.mais_comandos()
 
+
     def mais_comandos(self):
         if self.verificaSimbolo(";"):
             self.ponteiro += 1
@@ -164,10 +165,18 @@ class Sintatico():
                 if self.verificaSimboloException("$"):
                     self.ponteiro += 1
                     return
+        elif self.verificaSimbolo("while"):
+            self.ponteiro +=1
+            self.condicao()
+            self.verificaSimboloException("do")
+            self.ponteiro +=1
+            self.comandos()
+            self.verificaSimboloException("$")
+            self.ponteiro +=1
 
         elif self.verificaTipoException(TokenType.identificador):
             if self.pegaTokenAtual().termo not in self.tabelaSimbolos:
-                raise Exception ("Variavel não foi declarada")
+                raise Exception ("Variavel não foi declarada: " + self.pegaTokenAtual().termo)
             self.tipoAtual = self.tabelaSimbolos[self.pegaTokenAtual().termo] #le a variavel e atribui o valor para o tipo dela
             self.ponteiro +=1
             if self.verificaSimboloException(":="):
@@ -175,6 +184,7 @@ class Sintatico():
                 self.expressao()
                 self.tipoAtual = None 
                 return
+
 
     def condicao(self):
         self.expressao()
