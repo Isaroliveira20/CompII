@@ -11,8 +11,9 @@ class Sintatico():
         self.listaTokens = lista
         self.ponteiro = 0
         self.tabelaSimbolos = {}
+        self.tabelaSimbolosPosicao = {}
         self.tipoAtual = None
-
+        self.instrucoes = []
 
     def pegaTokenAtual(self):
         return self.listaTokens[self.ponteiro] 
@@ -40,6 +41,7 @@ class Sintatico():
 
     def programa(self):
         if self.verificaSimboloException("program"):
+            self.instrucoes.append("INPP")
             self.ponteiro += 1
         
             if self.verificaTipoException(TokenType.identificador):
@@ -48,8 +50,10 @@ class Sintatico():
                  
                 if self.verificaSimboloException("."):
                     self.ponteiro += 1
+                    self.instrucoes.append("PARA")
                     if len(self.listaTokens) == self.ponteiro:
                         print("Programa compilado! :)")
+
                      
 
     def corpo(self):
@@ -100,10 +104,9 @@ class Sintatico():
                 raise Exception ("Variavel já foi declarada")
             else:
                 self.tabelaSimbolos[self.pegaTokenAtual().termo] = self.tipoAtual
-                if self.tipoAtual == "real":
-                    print("ALME,0.0,," + self.pegaTokenAtual().termo)
-                else:
-                    print("ALME,0,," + self.pegaTokenAtual().termo)
+                self.tabelaSimbolosPosicao[self.pegaTokenAtual().termo] = len(self.tabelaSimbolosPosicao)
+                #print("ALME 1")
+                self.instrucoes.append("ALME 1")
             self.ponteiro +=1
             self.mais_var()
     
@@ -136,7 +139,10 @@ class Sintatico():
                 if self.verificaTipoException(TokenType.identificador):
                     if self.pegaTokenAtual().termo not in self.tabelaSimbolos:
                         raise Exception ("Variavel não foi declarada")
-                    print("read,,,"+ self.pegaTokenAtual().termo)
+                    #print("LEIT ") 
+                    self.instrucoes.append("LEIT")
+                    #print("ARMZ " + str(self.tabelaSimbolosPosicao[self.pegaTokenAtual().termo]))
+                    self.instrucoes.append("ARMZ " + str(self.tabelaSimbolosPosicao[self.pegaTokenAtual().termo]))
                     self.ponteiro +=1
                     if self.verificaSimboloException(")"):
                         self.ponteiro += 1
@@ -148,7 +154,10 @@ class Sintatico():
                 if self.verificaTipoException(TokenType.identificador):
                     if self.pegaTokenAtual().termo not in self.tabelaSimbolos:
                         raise Exception ("Variavel não foi declarada")
-                    print("write,,,"+ self.pegaTokenAtual().termo)
+                    #print("CRVL " + str(self.tabelaSimbolosPosicao[self.pegaTokenAtual().termo]))
+                    self.instrucoes.append("CRVL"+ str(self.tabelaSimbolosPosicao[self.pegaTokenAtual().termo]))
+                    #print("IMPR ")
+                    self.instrucoes.append("IMPR")
                     self.ponteiro += 1
                     if self.verificaSimboloException(")"):
                         self.ponteiro +=1
@@ -158,19 +167,25 @@ class Sintatico():
         elif self.verificaSimbolo("if"):
             self.ponteiro +=1
             self.condicao()
+            posCondicao = len(self.instrucoes)-1
             if self.verificaSimboloException("then"):
                 self.ponteiro += 1
                 self.comandos()
+                self.instrucoes[posCondicao] = "DSVF " + str(len(self.instrucoes))
                 self.pfalsa()
                 if self.verificaSimboloException("$"):
                     self.ponteiro += 1
                     return
         elif self.verificaSimbolo("while"):
             self.ponteiro +=1
+            guardaCondicao = len(self.instrucoes)-1
             self.condicao()
+            guardaInstrucao = len(self.instrucoes)-1
             self.verificaSimboloException("do")
             self.ponteiro +=1
             self.comandos()
+            self.instrucoes.append("DSVI " + str(guardaCondicao))
+            self.instrucoes[guardaInstrucao]= "DSVF " + str(len(self.instrucoes)-1)
             self.verificaSimboloException("$")
             self.ponteiro +=1
 
@@ -183,38 +198,52 @@ class Sintatico():
                 self.ponteiro += 1
                 self.expressao()
                 self.tipoAtual = None 
+                #print("ARMZ " + str(self.tabelaSimbolosPosicao[self.listaTokens[self.ponteiro -3].termo]))
+                self.instrucoes.append("ARMZ " + str(self.tabelaSimbolosPosicao[self.listaTokens[self.ponteiro -3].termo]))
                 return
 
 
     def condicao(self):
         self.expressao()
         self.relacao()
+        instrucaoTipo = self.instrucoes[-1]
+        self.instrucoes = self.instrucoes[:-1] 
         self.expressao()
         self.tipoAtual = None 
+        self.instrucoes.append(instrucaoTipo)
+        self.instrucoes.append("DSVF")
+
 
     def relacao(self):
         if self.verificaSimbolo("="):
             self.ponteiro += 1
+            self.instrucoes.append("CPIG")
             return
         elif self.verificaSimbolo("<>"):
             self.ponteiro +=1
+            self.instrucoes.append("CDES")
             return
         elif self.verificaSimbolo('>='):
             self.ponteiro +=1
+            self.instrucoes.append("CMAI")
             return
         elif self.verificaSimbolo("<="):
             self.ponteiro +=1
+            self.instrucoes.append("CPMI")
             return
         elif self.verificaSimbolo(">"):
             self.ponteiro +=1
+            self.instrucoes.append("CPMA")
             return
         elif self.verificaSimboloException("<"):
             self.ponteiro +=1
+            self.instrucoes.append("CPME")
             return
     
     def expressao(self):
         self.termo()
         self.outros_termos()
+
     
     def termo(self):   
         self.op_un()
@@ -236,18 +265,24 @@ class Sintatico():
 
             if self.tabelaSimbolos[self.pegaTokenAtual().termo] != self.tipoAtual:
                 raise Exception ("Tipos de variaveis diferentes")
+            #print("CRVL " + str(self.tabelaSimbolosPosicao[self.listaTokens[self.ponteiro].termo]))
+            self.instrucoes.append("CRVL " + str(self.tabelaSimbolosPosicao[self.listaTokens[self.ponteiro].termo]))
             self.ponteiro +=1
         elif self.verificaTipo(TokenType.num_inteiro):
             if self.tipoAtual == None:
                 self.tipoAtual = "integer"
             if "integer" != self.tipoAtual:
                 raise Exception ("Tipos de variaveis diferentes")
+            #print("CRCT " + str(self.tabelaSimbolosPosicao[self.listaTokens[self.ponteiro].termo]))
+            self.instrucoes.append("CRCT " + str(self.listaTokens[self.ponteiro].termo))
             self.ponteiro +=1
         elif self.verificaTipo(TokenType.num_real):
             if self.tipoAtual == None:
                 self.tipoAtual = "real"
             if "real" != self.tipoAtual:
                 raise Exception ("Tipos de variaveis diferentes")
+            #print("CRCT " + str(self.tabelaSimbolosPosicao[self.listaTokens[self.ponteiro].termo]))
+            self.instrucoes.append("CRCT " + str(self.listaTokens[self.ponteiro].termo))
             self.ponteiro +=1
         elif self.verificaSimboloException("("):
             self.ponteiro +=1
@@ -269,6 +304,12 @@ class Sintatico():
 
     def op_ad(self):
         if self.verificaSimbolo("+") or self.verificaSimbolo('-'):
+            if self.verificaSimbolo("+"):
+                #print ("SOMA")
+                self.instrucoes.append("SOMA")
+            elif self.verificaSimbolo("-"):
+                #print("SUBT")
+                self.instrucoes.append("SUBT")
             self.ponteiro +=1
         else:
             raise Exception("Erro não é + nem -")
@@ -290,7 +331,10 @@ class Sintatico():
 
     def pfalsa(self):
         if self.verificaSimbolo("else"):
+            tamanhoInstrucao = len(self.instrucoes)-1
+            self.instrucoes.append("DSVI")
             self.ponteiro +=1
             self.comandos()
+            self.instrucoes[tamanhoInstrucao+1] = "DSVI " + str(len(self.instrucoes)) 
         else:
             return 
