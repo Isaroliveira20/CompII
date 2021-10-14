@@ -1,5 +1,0 @@
-condicao
-pula pro final
-comandos
-volta pra condicao
-

@@ -1,6 +1,7 @@
 from TokenIsa import Token,TokenType
 
 
+
 # class NumberType(Enum):
 #     num_inteiro = 1
 #     num_real = 2
@@ -338,3 +339,4 @@ class Sintatico():
             self.instrucoes[tamanhoInstrucao+1] = "DSVI " + str(len(self.instrucoes)) 
         else:
             return 
+            
